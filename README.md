@@ -4,6 +4,7 @@
 
 ```shell
 git init myproject
+cd myproject
 ```
 
 #### Add Zydis as a submodule
