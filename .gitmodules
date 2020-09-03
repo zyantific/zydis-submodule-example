@@ -1,3 +1,9 @@
 [submodule "deps/zydis"]
-	path = deps/zydis
+	path = usermode/deps/zydis
 	url = https://github.com/zyantific/zydis.git
+[submodule "win-kernel/deps/zydis"]
+	path = win-kernel/deps/zydis
+	url = https://github.com/zyantific/zydis.git
+[submodule "win-kernel/deps/FindWDK"]
+	path = win-kernel/deps/FindWDK
+	url = https://github.com/SergiusTheBest/FindWDK.git
