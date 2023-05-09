@@ -1,38 +1,33 @@
 ## This project was created using these steps
 
-#### Create a new local git repository
-
-```shell
-git init myproject
-cd myproject
-```
-
-#### Add Zydis as a submodule
-
-```shell
-mkdir deps
-git submodule add 'https://github.com/zyantific/zydis.git' deps/zydis
-git submodule update --init --recursive
-```
-
 #### Create CMakeLists.txt and myproject.c
 
 CMakeLists.txt
 ```cmake
 cmake_minimum_required(VERSION "3.15")
+
+include(FetchContent)
+
 project("MyProject")
 
 # Register Zydis dependency.
+FetchContent_Declare(
+  Zydis
+  GIT_REPOSITORY https://github.com/zyantific/zydis.git
+  GIT_TAG        master
+)
 # Disable build of tools and examples.
-option(ZYDIS_BUILD_TOOLS "" OFF)
-option(ZYDIS_BUILD_EXAMPLES "" OFF)
-add_subdirectory("deps/zydis")
+set(ZYDIS_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(ZYDIS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+# Make available
+FetchContent_MakeAvailable(Zydis)
 
 # Add our project executable
 add_executable("MyProject" "myproject.c")
 
-# Have CMake link our project executable against Zydis.
-target_link_libraries("MyProject" PRIVATE "Zydis")
+# Have CMake link our project executable against Zydis. ${PROJECT_NAME} it's our name on the fifth line
+target_link_libraries(${PROJECT_NAME} PRIVATE "Zydis")
+target_include_directories(${PROJECT_NAME} PRIVATE "Zydis")
 ```
 
 myproject.c
@@ -52,7 +47,7 @@ int main()
 
     // Initialize decoder context
     ZydisDecoder decoder;
-    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_ADDRESS_WIDTH_64);
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
 
     // Initialize formatter. Only required when you actually plan to do instruction
     // formatting ("disassembling"), like we do here
@@ -66,23 +61,25 @@ int main()
     ZyanUSize offset = 0;
     const ZyanUSize length = sizeof(data);
     ZydisDecodedInstruction instruction;
-    while (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, data + offset, length - offset,
-        &instruction)))
+    ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+    while (ZYAN_SUCCESS(ZydisDecoderDecodeFull(&decoder, data + offset, length - offset,
+        &instruction, operands)))
     {
         // Print current instruction pointer.
         printf("%016" PRIX64 "  ", runtime_address);
 
-        // Format & print the binary instruction structure to human readable format
+        // Format & print the binary instruction structure to human-readable format
         char buffer[256];
-        ZydisFormatterFormatInstruction(&formatter, &instruction, buffer, sizeof(buffer),
-            runtime_address);
+        ZydisFormatterFormatInstruction(&formatter, &instruction, operands,
+            instruction.operand_count_visible, buffer, sizeof(buffer), runtime_address, ZYAN_NULL);
         puts(buffer);
 
         offset += instruction.length;
         runtime_address += instruction.length;
     }
-}
 
+    return 0;
+}
 ```
 
 
@@ -95,3 +92,12 @@ cmake ..
 make
 ./MyProject
 ```
+## Running the example (Windows based OS)
+
+```shell
+mkdir bld
+cd bld
+cmake ..
+Now we can open the .sln file with our project and linked Zydis
+```
+
