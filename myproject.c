@@ -13,7 +13,7 @@ int main()
 
     // Initialize decoder context
     ZydisDecoder decoder;
-    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_ADDRESS_WIDTH_64);
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
 
     // Initialize formatter. Only required when you actually plan to do instruction
     // formatting ("disassembling"), like we do here
@@ -27,19 +27,22 @@ int main()
     ZyanUSize offset = 0;
     const ZyanUSize length = sizeof(data);
     ZydisDecodedInstruction instruction;
-    while (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, data + offset, length - offset,
-        &instruction)))
+    ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+    while (ZYAN_SUCCESS(ZydisDecoderDecodeFull(&decoder, data + offset, length - offset,
+        &instruction, operands)))
     {
         // Print current instruction pointer.
         printf("%016" PRIX64 "  ", runtime_address);
 
-        // Format & print the binary instruction structure to human readable format
+        // Format & print the binary instruction structure to human-readable format
         char buffer[256];
-        ZydisFormatterFormatInstruction(&formatter, &instruction, buffer, sizeof(buffer),
-            runtime_address);
+        ZydisFormatterFormatInstruction(&formatter, &instruction, operands,
+            instruction.operand_count_visible, buffer, sizeof(buffer), runtime_address, ZYAN_NULL);
         puts(buffer);
 
         offset += instruction.length;
         runtime_address += instruction.length;
     }
+
+    return 0;
 }
