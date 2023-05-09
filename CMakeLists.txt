@@ -17,7 +17,7 @@ set(ZYDIS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(Zydis)
 
 # Add our project executable
-add_executable("MyProject" "myproject.c")
+add_executable("MyProject" "src/myproject.c")
 
 # Have CMake link our project executable against Zydis. ${PROJECT_NAME} it's our name on the fifth line
 target_link_libraries(${PROJECT_NAME} PRIVATE "Zydis")
