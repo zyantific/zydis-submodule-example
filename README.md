@@ -1,20 +1,5 @@
 ## This project was created using these steps
 
-#### Create a new local git repository
-
-```shell
-git init myproject
-cd myproject
-```
-
-#### Add Zydis as a submodule
-
-```shell
-mkdir deps
-git submodule add 'https://github.com/zyantific/zydis.git' deps/zydis
-git submodule update --init --recursive
-```
-
 #### Create CMakeLists.txt and myproject.c
 
 CMakeLists.txt
